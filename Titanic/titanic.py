@@ -63,3 +63,39 @@ proportion_men_survived = np.sum(men_onboard) / np.size(men_onboard)
 print('Proportion of women who survived is {}'.format(proportion_women_survived))
 print('Proportion of men who survived is {}').format(proportion_men_survived)
 
+# So we add a ceiling
+fare_ceiling = 40
+# then modify the data in the Fare column to = 39, if it is greater or equal to the ceiling
+data[data[0::, 9].astype(np.float) >= fare_ceiling, 9] = fare_ceiling - 1.0
+
+fare_bracket_size = 10
+number_of_price_brackets = fare_ceiling / fare_bracket_size
+
+# I know there were 1st, 2nd and 3rd classes on board
+# number_of_classes = 3
+
+# But it's better practice to calculate this from the data directly
+# Take the length of an array of unique values in column index 2
+number_of_classes = len(np.unique(data[0::, 2]))
+
+# Initialize the survival table with all zeros
+survival_table = np.zeros((2, number_of_classes, number_of_price_brackets))
+
+
+# loop through each class
+for i in range(number_of_classes):
+    # loop through each price bin
+    for j in range(number_of_price_brackets):
+
+        women_only_stats = data[(data[0::, 4] == "female") & (data[0::, 2].astype(np.float) == i+1) & (data[0:, 9].astype(np.float) >= j*fare_bracket_size) & (data[0:, 9].astype(np.float) < (j+1)*fare_bracket_size), 1]
+
+        men_only_stats = data[ (data[0::, 4] != "female") & (data[0::, 2].astype(np.float) == i+1) & (data[0:, 9].astype(np.float) >= j*fare_bracket_size)& (data[0:, 9].astype(np.float) < (j+1)*fare_bracket_size), 1]
+
+        survival_table[0, i, j] = np.mean(women_only_stats.astype(np.float))
+        survival_table[1, i, j] = np.mean(men_only_stats.astype(np.float))
+
+
+survival_table[survival_table != survival_table] = 0.
+
+print(survival_table)
+
